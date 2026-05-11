@@ -48,7 +48,7 @@ class TestExtractTags(unittest.TestCase):
             "recent_files": [],
         }
         tags = ss._extract_tags(signals)
-        self.assertIn("cyreneproject", tags)
+        self.assertIn("sampleproject", tags)
 
     def test_extract_from_cwd_multiple_components(self):
         signals = {

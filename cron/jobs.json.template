@@ -1,0 +1,51 @@
+{
+  "_README": "Copy this file to cron/jobs.json (gitignored). Replace ${CLAUDE_PROJECT_ROOT} with the absolute path where you cloned this repo. UUIDs and timestamps are placeholders — they will be regenerated on first daemon start.",
+  "version": 1,
+  "jobs": [
+    {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "name": "heartbeat-check",
+      "description": "Heartbeat: check HEARTBEAT.md and execute if non-empty",
+      "enabled": true,
+      "schedule": {
+        "type": "every",
+        "interval_seconds": 3600
+      },
+      "prompt": "${CLAUDE_PROJECT_ROOT}/HEARTBEAT.md",
+      "cwd": "${CLAUDE_PROJECT_ROOT}",
+      "one_shot": false,
+      "timeout_seconds": 120,
+      "type": "heartbeat",
+      "permission_mode": "bypassPermissions",
+      "created_at": "1970-01-01T00:00:00+00:00",
+      "next_run": "1970-01-01T00:00:00+00:00",
+      "last_result": "",
+      "consecutive_errors": 0,
+      "delete_after_run": false,
+      "timezone": "",
+      "jitter_seconds": 0
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000002",
+      "name": "memory-consolidation",
+      "description": "24時間毎にlessons_registryの新規教訓を統合原則に統合する",
+      "enabled": true,
+      "schedule": {
+        "type": "every",
+        "interval_seconds": 86400
+      },
+      "prompt": "memory_consolidate(mode='check')を実行し、新しい教訓があればパターンを抽出してmemory_consolidate(mode='save', principles_text=...)で保存してください。",
+      "cwd": "${CLAUDE_PROJECT_ROOT}",
+      "one_shot": false,
+      "timeout_seconds": 600,
+      "type": "standard",
+      "permission_mode": "bypassPermissions",
+      "created_at": "1970-01-01T00:00:00+00:00",
+      "next_run": "1970-01-01T00:00:00+00:00",
+      "consecutive_errors": 0,
+      "delete_after_run": false,
+      "timezone": "",
+      "jitter_seconds": 0
+    }
+  ]
+}

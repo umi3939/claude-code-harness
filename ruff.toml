@@ -1,0 +1,13 @@
+# Ruff configuration for Claude Code tools
+# Write-time quality enforcement via PostToolUse hook
+
+line-length = 120
+target-version = "py310"
+
+[lint]
+select = ["E", "F", "W", "I", "S", "B"]
+ignore = ["E501"]
+
+# Per-file ignores for test files (assert usage, etc.)
+[lint.per-file-ignores]
+"test_*.py" = ["S101"]

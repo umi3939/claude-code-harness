@@ -1,0 +1,85 @@
+# ─── 個人ディレクトリ (root 直下) ───
+# (このリポは元々 whitelist で構築済なので最小限。誤って add しないよう defensive)
+/projects/
+/sessions/
+/file-history/
+/backups/
+/memory/
+/todos/
+/statsig/
+/telemetry/
+/shell-snapshots/
+/downloads/
+/cache/
+/paste-cache/
+/session-env/
+/plugins/
+/backup_core_v2_20260324/
+/.claude-plugin/
+/.playwright-mcp/
+/docs/
+/growth/
+/discord_data/
+/data/
+/coding_tests/
+
+# ─── 個人ファイル ───
+history.jsonl
+mcp-needs-auth-cache.json
+stats-cache.json
+marketplace.json
+settings.local.json
+settings.local.json.*
+Users*.md
+bug_investigation_log.md
+
+# ─── ランタイム state ───
+hooks/.session-*
+hooks/.behavior-guard-state.json
+hooks/.dev-flow-state
+hooks/.team-created
+hooks/.lesson-feedback-state.json
+hooks/.memory-search-done
+hooks/.hontou-ni-cooldown
+hooks/.guard-type-validation.warned
+hooks/.session-extras-shown
+hooks/.last-ar-phase
+hooks/.subagent-stop-flag-*
+hooks/.evacuation.json
+hooks/*.bak
+hooks/*.bak.*
+hooks/*.disabled_*
+
+# ─── 設定実体 (テンプレあり) ───
+.mcp.json
+cron/jobs.json
+cron/notifications.json
+discord_data/message_hooks.json
+
+# ─── Python ───
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+build/
+dist/
+
+# ─── Node ───
+node_modules/
+
+# ─── OS ───
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─── バックアップ ───
+*.bak
+*.bak.*
+*.backup
+*~
+
+# ─── 一時 ───
+/.tmp/
+*.tmp

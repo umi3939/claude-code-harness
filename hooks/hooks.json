@@ -1,0 +1,268 @@
+{
+  "hooks": {
+    "SessionStart": [
+    {
+      "matcher": "startup",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node -e \"const p=require('path').join(process.cwd(),'hooks'); const fs=require('fs'); try{fs.unlinkSync(p+'/.session-ready')}catch{}; try{fs.unlinkSync(p+'/.session-start-done')}catch{}; try{fs.unlinkSync(p+'/.memory-search-done')}catch{}; try{fs.unlinkSync(p+'/.lesson-feedback-state.json')}catch{}; try{fs.unlinkSync(p+'/.team-created')}catch{}; try{fs.unlinkSync(p+'/.dev-flow-state')}catch{}; try{fs.unlinkSync(p+'/.session-end-done')}catch{}; fs.writeFileSync(p+'/.session-start-time',String(Date.now())); try{const sf=p+'/.behavior-guard-state.json';if(fs.existsSync(sf)){const s=JSON.parse(fs.readFileSync(sf,'utf8'));const keep=[];const c={};keep.forEach(k=>{if(k in s)c[k]=s[k]});fs.writeFileSync(sf,JSON.stringify(c))}}catch{}; const src=require('path').join(process.cwd(),'.mcp.json'); const dst=require('path').join(process.cwd(),'.mcp.json'); if(!fs.existsSync(dst)&&fs.existsSync(src)){try{fs.copyFileSync(src,dst)}catch{}}\"",
+          "timeout": 30,
+          "statusMessage": "Initializing session..."
+        },
+        {
+          "type": "command",
+          "command": "python \"hooks/sync_to_global.py\"",
+          "timeout": 15,
+          "statusMessage": "Syncing hooks to global..."
+        }
+      ]
+    },
+    {
+      "matcher": "resume",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node -e \"const p=require('path').join(process.cwd(),'hooks'); const fs=require('fs'); try{fs.unlinkSync(p+'/.session-ready')}catch{}; try{fs.unlinkSync(p+'/.session-start-done')}catch{}; try{fs.unlinkSync(p+'/.memory-search-done')}catch{}; try{fs.unlinkSync(p+'/.lesson-feedback-state.json')}catch{}; try{fs.unlinkSync(p+'/.team-created')}catch{}; try{fs.unlinkSync(p+'/.dev-flow-state')}catch{}; try{fs.unlinkSync(p+'/.session-end-done')}catch{}; fs.writeFileSync(p+'/.session-start-time',String(Date.now())); try{const sf=p+'/.behavior-guard-state.json';if(fs.existsSync(sf)){const s=JSON.parse(fs.readFileSync(sf,'utf8'));const keep=[];const c={};keep.forEach(k=>{if(k in s)c[k]=s[k]});fs.writeFileSync(sf,JSON.stringify(c))}}catch{}; const src=require('path').join(process.cwd(),'.mcp.json'); const dst=require('path').join(process.cwd(),'.mcp.json'); if(!fs.existsSync(dst)&&fs.existsSync(src)){try{fs.copyFileSync(src,dst)}catch{}}\"",
+          "timeout": 30,
+          "statusMessage": "Resuming session..."
+        },
+        {
+          "type": "command",
+          "command": "python \"hooks/sync_to_global.py\"",
+          "timeout": 15,
+          "statusMessage": "Syncing hooks to global..."
+        }
+      ]
+    },
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "python \"hooks/msg_hook_health_check.py\"",
+          "timeout": 10,
+          "statusMessage": "Checking message hook health..."
+        }
+      ]
+    }
+  ],
+  "UserPromptSubmit": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "python \"hooks/skill_executor.py\" agent UserPromptSubmit",
+          "timeout": 15
+        }
+      ]
+    }
+  ],
+  "PreToolUse": [
+    {
+      "matcher": "Edit|Write|Bash|Agent|WebFetch|WebSearch|TeamCreate|Read",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node \"hooks/behavior-guard.js\"",
+          "timeout": 15
+        }
+      ]
+    },
+    {
+      "matcher": "mcp__memory-tools|mcp__self-observation|mcp__persistent-cron|mcp__discord|mcp__http-fetch",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node \"hooks/behavior-guard.js\"",
+          "timeout": 10
+        }
+      ]
+    },
+    {
+      "matcher": "Edit|Write|Bash",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node \"hooks/secret-detector.js\"",
+          "timeout": 5
+        }
+      ]
+    },
+    {
+      "matcher": "Edit|Write|Agent",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node \"hooks/session-readiness-gate.js\"",
+          "timeout": 5
+        }
+      ]
+    },
+    {
+      "matcher": "Edit|Write",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node \"hooks/suggest-compact.js\"",
+          "timeout": 5
+        }
+      ]
+    },
+    {
+      "matcher": "mcp__memory-tools|mcp__self-observation|mcp__persistent-cron|mcp__discord|mcp__http-fetch",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node \"hooks/mcp-health-check.js\"",
+          "timeout": 5
+        }
+      ]
+    }
+  ],
+  "PostToolUse": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node \"hooks/observation-logger.js\"",
+          "timeout": 5
+        }
+      ]
+    },
+    {
+      "matcher": "Edit|Write",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node \"hooks/auto-stats-update.js\"",
+          "timeout": 15
+        }
+      ]
+    },
+    {
+      "matcher": "Edit|Write",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node \"hooks/auto-test-runner.js\"",
+          "timeout": 35
+        }
+      ]
+    },
+    {
+      "matcher": "Edit|Write",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node \"hooks/auto-consolidation-check.js\"",
+          "timeout": 5
+        }
+      ]
+    },
+    {
+      "matcher": "Edit|Write",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "python \"hooks/ruff_quality_gate.py\"",
+          "timeout": 15
+        }
+      ]
+    },
+    {
+      "matcher": "Agent",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "python \"hooks/pattern_extractor.py\"",
+          "timeout": 10
+        }
+      ]
+    },
+    {
+      "matcher": "mcp__memory-tools|mcp__self-observation|mcp__persistent-cron|mcp__discord|mcp__http-fetch",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node \"hooks/mcp-health-check.js\"",
+          "timeout": 5
+        }
+      ]
+    },
+    {
+      "matcher": "mcp__discord",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "python \"hooks/msg_hook_log_reader.py\"",
+          "timeout": 5
+        }
+      ]
+    }
+  ],
+  "PreCompact": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node \"hooks/pre-compact-save.js\"",
+          "timeout": 10,
+          "statusMessage": "Saving context before compression..."
+        }
+      ]
+    }
+  ],
+  "Stop": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node \"hooks/stop-consolidation-check.js\"",
+          "timeout": 10,
+          "async": false
+        }
+      ]
+    },
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node \"hooks/lesson-after-feedback.js\"",
+          "timeout": 10,
+          "async": false
+        }
+      ]
+    },
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node \"hooks/hontou-ni-check.js\"",
+          "timeout": 10,
+          "async": false
+        }
+      ]
+    },
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node \"hooks/stop-session-end.js\"",
+          "timeout": 10,
+          "async": false
+        }
+      ]
+    },
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node \"hooks/stop-session-aar.js\"",
+          "timeout": 10,
+          "async": false
+        }
+      ]
+    }
+  ]
+  }
+}

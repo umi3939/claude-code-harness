@@ -1,0 +1,3 @@
+{
+  "allowed_matchers": ["permission_prompt", "idle_prompt"]
+}

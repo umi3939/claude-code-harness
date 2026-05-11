@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "description": "Hook eligibility prerequisites. Rules not listed here are always eligible (fail-open default). Separated from behavior-rules.json to prevent parse errors from causing full lockout.",
+  "rules": {}
+}

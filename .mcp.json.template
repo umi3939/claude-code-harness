@@ -1,0 +1,57 @@
+{
+  "_README": "Copy this file to .mcp.json and replace ${CLAUDE_PROJECT_ROOT} with the absolute path where you cloned this repo. The CLAUDE_PROJECT_ROOT env var is read by the tools themselves (file_io.resolve_project_root) so memory data is stored under that root.",
+  "mcpServers": {
+    "memory-tools": {
+      "command": "python",
+      "args": ["${CLAUDE_PROJECT_ROOT}/tools/memory_mcp_server.py"],
+      "env": {
+        "CLAUDE_PROJECT_ROOT": "${CLAUDE_PROJECT_ROOT}",
+        "MEMORY_DIR": "${CLAUDE_PROJECT_ROOT}/memory"
+      },
+      "description": "Memory system: sessions, emotions, episodes, STM, search, consolidation (17 tools)"
+    },
+    "self-observation": {
+      "command": "python",
+      "args": ["${CLAUDE_PROJECT_ROOT}/tools/self_observation_mcp_server.py"],
+      "env": {
+        "CLAUDE_PROJECT_ROOT": "${CLAUDE_PROJECT_ROOT}",
+        "MEMORY_DIR": "${CLAUDE_PROJECT_ROOT}/memory"
+      },
+      "description": "Self-observation pipeline: self_model, difference, strain, image, coherence, stability, tone (12 tools)"
+    },
+    "persistent-cron": {
+      "command": "python",
+      "args": ["${CLAUDE_PROJECT_ROOT}/tools/cron_mcp_server.py"],
+      "env": {
+        "CLAUDE_PROJECT_ROOT": "${CLAUDE_PROJECT_ROOT}"
+      },
+      "description": "Persistent cron: scheduled/heartbeat jobs, daemon control, execution logs (11 tools)"
+    },
+    "discord": {
+      "command": "python",
+      "args": ["${CLAUDE_PROJECT_ROOT}/tools/discord_mcp_server.py"],
+      "env": {
+        "CLAUDE_PROJECT_ROOT": "${CLAUDE_PROJECT_ROOT}"
+      },
+      "description": "Discord messaging: send/receive/connect/status (7 tools)"
+    },
+    "http-fetch": {
+      "command": "python",
+      "args": ["${CLAUDE_PROJECT_ROOT}/tools/http_fetch_mcp_server.py"],
+      "env": {
+        "CLAUDE_PROJECT_ROOT": "${CLAUDE_PROJECT_ROOT}"
+      },
+      "description": "Raw HTTP GET/POST without AI processing — for JSON APIs and status checks (1 tool)"
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest", "--browser", "msedge"],
+      "description": "Browser automation via Microsoft Playwright — uses existing Edge"
+    }
+  },
+  "_management": {
+    "max_servers": 10,
+    "context_warning": "Keep under 10 MCPs. Enforced by behavior-guard mcp-server-limit (blocking hook).",
+    "adding_new": "Search npm/community MCPs first. Self-implement only as last resort."
+  }
+}

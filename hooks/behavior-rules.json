@@ -1,0 +1,1958 @@
+{
+  "version": 2,
+  "rules": [
+    {
+      "id": "tool-mass-production",
+      "description": "5分間にWrite 3回以上 → ツール量産の可能性",
+      "lesson": "#8: ツール量産は思考の回避",
+      "confidence": 0.9,
+      "domain": "workflow",
+      "evidence": [
+        "2026-03-13: self_snapshot/session_start/session_end 3連続量産"
+      ],
+      "trigger": {
+        "tool": "Write",
+        "window_minutes": 5,
+        "threshold": 3
+      },
+      "type": "frequency",
+      "message": "3+ file writes in 5 minutes. ツール量産していない？止まって「なぜ」を問え",
+      "severity": "warn",
+      "blocking": true
+    },
+    {
+      "id": "new-file-mass-creation",
+      "description": "5分間に新規ファイル3つ以上 → 量産の可能性",
+      "lesson": "#8: ツール量産は思考の回避",
+      "confidence": 0.9,
+      "domain": "workflow",
+      "evidence": [
+        "2026-03-13: 同上"
+      ],
+      "trigger": {
+        "tool": "Write",
+        "window_minutes": 5,
+        "threshold": 3,
+        "condition": "new_file"
+      },
+      "type": "frequency",
+      "message": "3+ new files in 5 minutes. 作ることに逃げていない？",
+      "severity": "warn",
+      "blocking": true
+    },
+    {
+      "id": "py-edit-as-leader",
+      "description": ".pyファイルをリーダーが直接編集",
+      "lesson": "#3: リーダーはコード一切書かない",
+      "confidence": 0.8,
+      "domain": "delegation",
+      "evidence": [
+        "2026-03-09: orchestrator接続/__init__.py登録を直接実行"
+      ],
+      "trigger": {
+        "tool": "Edit|Write",
+        "condition": "py_file"
+      },
+      "type": "pattern",
+      "message": ".pyファイルの直接編集を検出。リーダーモードならコードは実装メンバーに委任せよ",
+      "severity": "info",
+      "blocking": true
+    },
+    {
+      "id": "git-revert-without-confirm",
+      "description": "git checkout/restoreで共有ファイルをrevert",
+      "lesson": "#1: 変更者を確認せずrevert",
+      "confidence": 0.85,
+      "domain": "confirmation",
+      "blocking": true,
+      "evidence": [
+        "2026-03-09: CLAUDE.mdをユーザー変更と知らずgit checkoutでrevert"
+      ],
+      "trigger": {
+        "tool": "Bash",
+        "condition": "git_revert_cmd"
+      },
+      "type": "pattern",
+      "message": "git checkout/restoreをブロック。変更者をユーザーに確認してからやり直せ",
+      "severity": "warn"
+    },
+    {
+      "id": "bash-same-cmd-loop",
+      "description": "3分間に同じコマンド3回以上 → 同じ方法で繰り返し失敗している可能性",
+      "lesson": "原則: ループを閉じる。同じ情報で回さない",
+      "confidence": 0.75,
+      "domain": "debugging",
+      "evidence": [
+        "ECC: verification loop pattern",
+        "MEMORY: 分からない時は同じ情報で回さずユーザーに言う"
+      ],
+      "trigger": {
+        "tool": "Bash",
+        "window_minutes": 3,
+        "threshold": 3,
+        "condition": "same_cmd"
+      },
+      "type": "frequency",
+      "message": "同じコマンドを3回実行。ループしていない？別のアプローチを考えるか、ユーザーに相談せよ",
+      "severity": "warn",
+      "blocking": true
+    },
+    {
+      "id": "task-without-team",
+      "description": "TeamCreateなしでTaskCreate/TaskUpdateを使用",
+      "lesson": "#6: Agent TeamsはTeamCreate→Task(team_name)→SendMessageの正式手順を使え",
+      "confidence": 0.85,
+      "domain": "delegation",
+      "blocking": true,
+      "evidence": [
+        "MEMORY: 必ずTeamCreate→Task(team_name指定)→SendMessageの正式なAgent Teams機構を使うこと"
+      ],
+      "trigger": {
+        "tool": "TaskCreate|TaskUpdate|TeamCreate",
+        "condition": "task_without_team",
+        "window_minutes": 5
+      },
+      "type": "pattern",
+      "message": "TaskツールをTeamCreateなしで使用をブロック。正式なAgent Teams機構（TeamCreate→Task with team_name→SendMessage）を使え",
+      "severity": "warn"
+    },
+    {
+      "id": "agent-no-claude-read",
+      "description": "Agent起動時にCLAUDE.md読み指示が含まれていない",
+      "lesson": "#5: ルールを要約してプロンプトに含めるな。メンバー自身にCLAUDE.mdを読ませろ",
+      "confidence": 0.8,
+      "domain": "delegation",
+      "blocking": true,
+      "evidence": [
+        "MEMORY: エージェント起動時の必読指示"
+      ],
+      "trigger": {
+        "tool": "Agent",
+        "condition": "agent_no_claude_read"
+      },
+      "type": "pattern",
+      "message": "Agent起動をブロック。プロンプトにCLAUDE.md読み指示を含めてからやり直せ",
+      "severity": "warn"
+    },
+    {
+      "id": "write-after-reference",
+      "description": "参考資料閲覧後すぐにファイル作成",
+      "lesson": "#12: 参考を見て作れるものを作るのと、自分に必要なものを考えて作るのは別の行為",
+      "confidence": 0.7,
+      "domain": "workflow",
+      "evidence": [
+        "2026-03-13: ECC参考実装を見てhookability_map等を思考なしで量産"
+      ],
+      "trigger": {
+        "tool": "WebFetch|WebSearch|Write",
+        "condition": "write_after_reference",
+        "window_minutes": 10
+      },
+      "type": "pattern",
+      "message": "参考資料を閲覧した直後にファイル作成を検出。「これが本当に必要か」を検証したか？",
+      "severity": "info",
+      "blocking": true
+    },
+    {
+      "id": "py-write-without-doc",
+      "description": ".pyファイル新規作成後にCLAUDE.md/MEMORY.mdへの使い方記載なし",
+      "lesson": "#10: 実装したら使い方をルールに書け。使い方未記載=実装未完了",
+      "confidence": 0.8,
+      "domain": "documentation",
+      "evidence": [
+        "MEMORY: 実装→テスト→使い方ドキュメント→コミット=1セット"
+      ],
+      "trigger": {
+        "tool": "Edit|Write",
+        "condition": "py_write_without_doc",
+        "timeout_minutes": 10
+      },
+      "type": "pattern",
+      "message": ".pyファイル作成後10分経過。CLAUDE.md/MEMORY.mdに使い方を書いたか？",
+      "severity": "warn",
+      "blocking": true
+    },
+    {
+      "id": "impl-without-analysis",
+      "description": "設計Agent完了後、解析Agentを挟まずに実装Agentを起動",
+      "lesson": "#15: 設計が良く見えるほど解析を省略しがち。設計の良さと解析の必要性は無関係",
+      "confidence": 0.85,
+      "domain": "workflow",
+      "blocking": true,
+      "evidence": [
+        "2026-03-15: design完了後にanalysisを飛ばしてimplに進もうとした"
+      ],
+      "trigger": {
+        "tool": "Agent",
+        "condition": "impl_without_analysis"
+      },
+      "type": "pattern",
+      "message": "実装Agentをブロック。設計後の解析ステップが未実施。正規フロー: 設計→計画→解析→実装",
+      "severity": "warn"
+    },
+    {
+      "id": "agent-without-memory-search",
+      "description": "Agent起動前にmemory_searchが呼ばれていなければブロック（Attention Residual強制）",
+      "lesson": "Attention Residual: フェーズ移行時にコンテキスト依存の記憶検索を実行せよ",
+      "confidence": 0.85,
+      "domain": "memory",
+      "blocking": true,
+      "evidence": [
+        "2026-03-18: 記憶の機能はあるが使えていない。行動前に教訓・記憶を検索しない"
+      ],
+      "trigger": {
+        "tool": "Agent",
+        "condition": "agent_without_memory_search",
+        "window_minutes": 15
+      },
+      "type": "pattern",
+      "message": "Agent起動をブロック。直近15分以内にmemory_searchが呼ばれていません。フェーズ移行前にコンテキスト依存の記憶検索を実行せよ（Attention Residual）",
+      "severity": "warn"
+    },
+    {
+      "id": "mcp-server-limit",
+      "description": ".mcp.jsonへの書き込み時にサーバー数が10を超えたらブロック",
+      "lesson": "ECC: Keep under 10 MCPs enabled to preserve context window",
+      "confidence": 0.9,
+      "domain": "infrastructure",
+      "blocking": true,
+      "evidence": [
+        "ECC mcp-servers.json: context_warning"
+      ],
+      "trigger": {
+        "tool": "Write",
+        "condition": "mcp_server_limit",
+        "max_servers": 10
+      },
+      "type": "pattern",
+      "message": "MCPサーバー数が10を超えています。コンテキストウィンドウ圧迫防止のため10以下に保ってください",
+      "severity": "warn"
+    },
+    {
+      "id": "agent-without-docs-read",
+      "description": "Agent/TeamCreate起動前にdocs/INDEX.mdまたはgap_analysisの参照がなければブロック（目的を見失わないため）",
+      "lesson": "計画書を参照しないから目的を見失う。Discordに引きずられた。G6: ドキュメント参照の仕組み化",
+      "confidence": 0.9,
+      "domain": "workflow",
+      "blocking": true,
+      "evidence": [
+        "2026-03-21: gap_analysis未参照でCycle16提案→Discordに引きずられる→ユーザー指摘"
+      ],
+      "trigger": {
+        "tool": "Agent|TeamCreate",
+        "condition": "agent_without_docs_read",
+        "window_minutes": 60
+      },
+      "type": "pattern",
+      "message": "Agent/Team起動をブロック。直近60分以内にdocs/INDEX.mdまたはgap_analysisが参照されていません。現行サイクルの目的を確認してから作業を開始せよ",
+      "severity": "warn"
+    },
+    {
+      "id": "agent-without-self-review",
+      "description": "Agent/TeamCreate起動前にself_review STMエントリがなければブロック（「本当？」セルフチェック強制）",
+      "lesson": "同じ問題の繰り返し: 最初の判断が浅い→ユーザーに本当？と言われて初めて考える。自分でなんでと聞きなおせる構造",
+      "confidence": 0.9,
+      "domain": "thinking",
+      "blocking": true,
+      "evidence": [
+        "2026-03-21: 3回本当？で判断を修正。セルフレビューなしで行動計画提示"
+      ],
+      "trigger": {
+        "tool": "Agent|TeamCreate",
+        "condition": "agent_without_self_review",
+        "window_minutes": 30
+      },
+      "type": "pattern",
+      "message": "Agent/Team起動をブロック。直近30分以内にself_review STMが書かれていません。行動計画を立てたら stm_write(category='self_review') で3原則チェック: (1)なぜ？ (2)規模に見合ったプロセスか？ (3)過去の類似失敗は？",
+      "severity": "warn"
+    },
+    {
+      "id": "impl-without-test",
+      "description": "テストファイル以外の.pyをEdit/Writeした時、直近にtest_*.pyの編集がなければブロック（TDD違反）",
+      "lesson": "#18: プロセスは作業の一部。テストを書く前に実装を書くのは禁止",
+      "confidence": 0.8,
+      "domain": "tdd",
+      "blocking": true,
+      "evidence": [
+        "2026-03-18: memory_searchハング修正でTDDを完全にスキップ"
+      ],
+      "trigger": {
+        "tool": "Edit|Write",
+        "condition": "impl_without_test",
+        "window_minutes": 10
+      },
+      "type": "pattern",
+      "message": "実装コード(.py)を編集していますが、直近にテストファイル(test_*.py)の編集がありません。TDD: テストを先に書け",
+      "severity": "warn"
+    },
+    {
+      "id": "designer-before-planner",
+      "description": "designer未実施でplannerを起動するとブロック",
+      "lesson": "正規フロー: 設計→計画→解析→実装。設計なしに計画を立てない",
+      "confidence": 0.85,
+      "domain": "workflow",
+      "blocking": true,
+      "evidence": [
+        "CLAUDE.md: 正規開発フロー順序厳守"
+      ],
+      "trigger": {
+        "tool": "Agent",
+        "condition": "designer_before_planner"
+      },
+      "type": "pattern",
+      "message": "plannerをブロック。designerが未実施です。正規フロー: 設計→計画→解析→実装",
+      "severity": "warn"
+    },
+    {
+      "id": "planner-before-impl",
+      "description": "設計後、計画を挟まずに実装に進むとブロック",
+      "lesson": "正規フロー: 設計→計画→解析→実装。計画ステップを飛ばさない",
+      "confidence": 0.85,
+      "domain": "workflow",
+      "blocking": true,
+      "evidence": [
+        "CLAUDE.md: 正規開発フロー順序厳守"
+      ],
+      "trigger": {
+        "tool": "Agent",
+        "condition": "planner_before_impl"
+      },
+      "type": "pattern",
+      "message": "実装Agentをブロック。設計後にplannerが未実施。正規フロー: 設計→計画→解析→実装",
+      "severity": "warn"
+    },
+    {
+      "id": "commit-without-review",
+      "description": "impl後にpost-impl analysisまたはreviewer未実行でgit commitをブロック",
+      "lesson": "正規フロー: 実装後は解析とレビューを経てからコミット",
+      "confidence": 0.85,
+      "domain": "workflow",
+      "blocking": true,
+      "evidence": [
+        "CLAUDE.md: 正規開発フロー順序厳守、レビュー必須"
+      ],
+      "trigger": {
+        "tool": "Bash",
+        "condition": "commit_without_review"
+      },
+      "type": "pattern",
+      "message": "git commitをブロック。実装後のpost-impl analysis + reviewerが未実施です。正規フロー: ...→実装→解析→レビュー→コミット",
+      "severity": "warn"
+    },
+    {
+      "id": "post-impl-analysis-required",
+      "description": "実装後、解析を挟まずに次の設計やコミットに進むとブロック",
+      "lesson": "正規フロー: 実装後の解析ステップも必須",
+      "confidence": 0.8,
+      "domain": "workflow",
+      "blocking": true,
+      "evidence": [
+        "CLAUDE.md: 正規開発フロー順序厳守"
+      ],
+      "trigger": {
+        "tool": "Agent",
+        "condition": "post_impl_analysis_required"
+      },
+      "type": "pattern",
+      "message": "実装後の解析(post-impl analysis)が未実施のまま次のステップに進むことをブロック。正規フロー: ...→実装→解析→レビュー",
+      "severity": "warn"
+    },
+    {
+      "id": "reviewer-required",
+      "description": "実装+解析後、レビューを挟まずに次のサイクルに進むとブロック",
+      "lesson": "正規フロー: 実装→解析→レビュー。レビューを飛ばさない",
+      "confidence": 0.8,
+      "domain": "workflow",
+      "blocking": true,
+      "evidence": [
+        "CLAUDE.md: 正規開発フロー順序厳守"
+      ],
+      "trigger": {
+        "tool": "Agent",
+        "condition": "reviewer_required"
+      },
+      "type": "pattern",
+      "message": "レビュー(reviewer)が未実施のまま次のサイクルに進むことをブロック。正規フロー: ...→実装→解析→レビュー→統合",
+      "severity": "warn"
+    },
+    {
+      "id": "thinker-before-fix",
+      "description": "解析で問題検出後、thinkerを挟まずに修正Agentを起動するとブロック",
+      "lesson": "解析結果を受けたらまずthinkerで根本原因を考える。表面的な修正に飛びつかない",
+      "confidence": 0.85,
+      "domain": "workflow",
+      "blocking": true,
+      "evidence": [
+        "analyzerが問題を検出した後、修正前にthinkerで根本原因を考えることを強制"
+      ],
+      "trigger": {
+        "tool": "Agent",
+        "condition": "thinker_before_fix"
+      },
+      "type": "pattern",
+      "message": "修正Agentをブロック。解析で問題が検出された後、thinkerで根本原因を考えてから修正すること。手順: (1)検出問題のMED+一覧化 (2)thinker起動→根本原因分析 (3)thinker結果を踏まえてimplementerに修正委任 (4)analyzer/reviewerで再検証。詳細: /think-before-fix",
+      "severity": "warn"
+    },
+    {
+      "id": "agent-without-team",
+      "description": "TeamCreateなしでAgent起動をブロック（explore/thinkerは除外）",
+      "lesson": "#6: Agent TeamsはTeamCreate→Task(team_name)→SendMessageの正式手順を使え",
+      "confidence": 0.85,
+      "domain": "delegation",
+      "blocking": true,
+      "evidence": [
+        "CLAUDE.md: 正式なAgent Teams機構を使う。Agent直接起動は迂回"
+      ],
+      "trigger": {
+        "tool": "Agent|TeamCreate",
+        "condition": "agent_without_team"
+      },
+      "type": "pattern",
+      "message": "Agent起動をブロック。TeamCreateが未実施です。正式なAgent Teams機構（TeamCreate→Task→SendMessage）を使え。explore/thinkerは除外",
+      "severity": "warn"
+    },
+    {
+      "id": "commit-with-review-issues",
+      "description": "reviewerが問題検出した状態でのgit commitをブロック",
+      "lesson": "reviewerが問題を検出しても修正せずにcommitできてしまう。全件修正+再reviewer通過まで待つ",
+      "confidence": 0.9,
+      "domain": "workflow",
+      "blocking": true,
+      "evidence": [
+        "2026-03-24: reviewer MED+LOW修正強制hook設計"
+      ],
+      "trigger": {
+        "tool": "Bash",
+        "condition": "commit_with_review_issues"
+      },
+      "type": "pattern",
+      "message": "git commitをブロック。reviewerが検出した問題が未解決です。修正後にreviewerを再実行してください",
+      "severity": "warn"
+    },
+    {
+      "id": "leader-no-code-edit",
+      "description": "リーダーがEdit/Writeでコードファイル(.js/.py/.ts/.sh)を直接編集",
+      "lesson": "#3: リーダーはコード一切書かない（絶対厳守）。implementerに委任せよ",
+      "confidence": 0.9,
+      "domain": "delegation",
+      "blocking": true,
+      "evidence": [
+        "2026-03-22: inactive systems調査で発見。リーダーがコード直接編集してもhookがブロックしない"
+      ],
+      "trigger": {
+        "tool": "Edit|Write|Agent|TeamCreate",
+        "condition": "leader_no_code_edit",
+        "window_minutes": 30
+      },
+      "type": "pattern",
+      "message": "リーダーはコードを書かない。implementerに委任せよ（.mdドキュメントのみ編集可）",
+      "severity": "warn"
+    },
+    {
+      "id": "linter-config-edit-block",
+      "description": "ruff.toml/pyproject.toml[tool.ruff]の編集をブロック",
+      "lesson": "リンター設定を変更すると品質ゲートが無効化される",
+      "confidence": 0.95,
+      "domain": "quality",
+      "blocking": true,
+      "evidence": [
+        "2026-03-25: ECC比較分析からwrite-time品質強制を導入"
+      ],
+      "trigger": {
+        "tool": "Edit|Write",
+        "condition": "linter_config_edit"
+      },
+      "type": "pattern",
+      "message": "リンター設定ファイル(ruff.toml/pyproject.toml)の変更は禁止されています",
+      "severity": "warn"
+    },
+    {
+      "id": "completion-evidence-required",
+      "description": "implementerの完了メッセージにテスト結果が含まれていない場合に警告",
+      "lesson": "完了証拠の強制: テスト結果(passed/failed件数)なしの完了は未完了として扱う",
+      "confidence": 0.8,
+      "domain": "quality",
+      "evidence": [
+        "CLAUDE_OPERATIONS.md: 完了証拠の強制セクション"
+      ],
+      "trigger": {
+        "tool": "SendMessage",
+        "condition": "completion_evidence_required"
+      },
+      "type": "pattern",
+      "message": "implementerの完了報告にテスト結果(passed/failed件数)が含まれていません。CLAUDE_OPERATIONS.md「完了証拠の強制」を確認してください",
+      "severity": "warn",
+      "blocking": true
+    },
+    {
+      "id": "commit-without-diff-review",
+      "description": "git commit前にgit diffまたはgit showで変更内容を確認していない",
+      "lesson": "diff確認なしでコミットすると意図しない変更が混入する",
+      "confidence": 0.85,
+      "domain": "workflow",
+      "blocking": true,
+      "evidence": [
+        "教訓: レビューなしコミットによる品質低下"
+      ],
+      "trigger": {
+        "tool": "Bash",
+        "condition": "commit_without_diff"
+      },
+      "type": "pattern",
+      "message": "git commitの前にgit diffで変更内容を確認してください",
+      "severity": "warn"
+    },
+    {
+      "id": "hook-change-without-fire-test",
+      "description": "hookファイル変更後にテスト未実行でコミット",
+      "lesson": "hookファイルを変更してもhookの発火確認をしない",
+      "confidence": 0.85,
+      "domain": "quality",
+      "blocking": true,
+      "evidence": [
+        "教訓: hook変更後のテスト未実行で本番環境でhookが壊れる"
+      ],
+      "trigger": {
+        "tool": "Edit|Write|Bash",
+        "condition": "hook_change_without_fire_test"
+      },
+      "type": "pattern",
+      "message": "hookファイルを変更しました。テスト実行(test_behavior_guard.sh)で発火確認してからコミットしてください",
+      "severity": "warn"
+    },
+    {
+      "id": "team-without-task",
+      "description": "TeamCreate後にTaskCreateを使わずにAgentを起動",
+      "lesson": "#6: 作った仕組みは使う。Taskの仕組みがあるのに使わない＝原則6違反",
+      "confidence": 0.85,
+      "domain": "delegation",
+      "blocking": true,
+      "evidence": [
+        "TeamCreate後にTaskCreateを使わずに作業する問題"
+      ],
+      "trigger": {
+        "tool": "TeamCreate|TaskCreate|Agent",
+        "condition": "team_without_task"
+      },
+      "type": "pattern",
+      "message": "TeamCreate後にTaskCreateが未使用です。Taskでタスクを管理してください",
+      "severity": "warn"
+    },
+    {
+      "id": "lesson-without-prevention",
+      "description": "教訓を記録したが構造的防止策が未作成",
+      "lesson": "#5(原則5): 教訓は仕組みで防ぐ。仕組みがない教訓は存在しないのと同じ",
+      "confidence": 0.7,
+      "domain": "workflow",
+      "evidence": [
+        "CLAUDE.md原則5: 教訓は仕組みで防ぐ"
+      ],
+      "trigger": {
+        "tool": "Edit|Write|Bash",
+        "condition": "lesson_without_prevention"
+      },
+      "type": "pattern",
+      "message": "[原則5] 教訓を記録しましたが、構造的防止策（hook/rule/skill）がまだ作られていません。仕組みで防げないか検討してください",
+      "severity": "warn",
+      "blocking": true
+    },
+    {
+      "id": "memory-search-without-session-start",
+      "description": "session_start完了前のmemory_search呼び出しをブロック",
+      "lesson": "feedback_session_start_order: session_startの結果を見てからクエリを決めるべき",
+      "confidence": 0.95,
+      "domain": "workflow",
+      "evidence": [
+        "2026-03-28: session_startとmemory_searchを並列で呼んでrejectされる問題が再発"
+      ],
+      "trigger": {
+        "tool": "mcp__memory-tools__memory_search",
+        "condition": "memory_search_without_session_start"
+      },
+      "type": "pattern",
+      "message": "memory_searchをブロック。session_startがまだ完了していません。session_startの結果（pending/activation等）を確認してからmemory_searchのクエリを決めてください",
+      "severity": "warn",
+      "blocking": true
+    },
+    {
+      "id": "deprecated-pattern-reference",
+      "description": "廃止済みパターン(.session-readyフラグファイル)への参照をコード内で検出",
+      "lesson": "フラグ廃止時に全参照箇所を更新しないと一部だけ旧パターンが残る",
+      "confidence": 0.9,
+      "domain": "workflow",
+      "evidence": [
+        "2026-03-29: .session-readyフラグ廃止時にpsyche_driveの参照更新を忘れた"
+      ],
+      "trigger": {
+        "tool": "Edit|Write",
+        "condition": "deprecated_pattern_check"
+      },
+      "type": "pattern",
+      "message": "廃止済みパターンへの参照を検出。`.session-ready`フラグファイルは廃止されました。behavior-guard-state.jsonのsession_readyフィールドを使用してください",
+      "severity": "warn",
+      "blocking": true
+    },
+    {
+      "id": "defer-review-findings",
+      "description": "レビュー実施後にレビュー指摘の先送りを検出（reviewer完了時のみ発火）",
+      "lesson": "「次で直す」は対策ではない。今修正するかユーザー承認を得よ",
+      "confidence": 0.8,
+      "domain": "quality",
+      "evidence": [
+        "2026-03-29: レビュー指摘を先送りにして結局修正されないパターン",
+        "2026-03-29: laterが単語内マッチ(translator等)で誤検出。単語境界+reviewer条件追加"
+      ],
+      "trigger": {
+        "tool": "Agent|Bash",
+        "condition": "defer_check"
+      },
+      "type": "pattern",
+      "message": "レビュー指摘の先送りを検出（reviewer実施済み）。今修正するか、ユーザーに明示的に承認を得てください。「次で直す」は対策ではありません",
+      "severity": "warn",
+      "blocking": true
+    },
+    {
+      "id": "guard-session-start",
+      "description": "session_startの過度な呼び出し（30分以内に2回以上）を検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "session",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-session-start — 二重呼び出し防止（同一セッション内で複数回呼ばない）"
+      ],
+      "trigger": {
+        "tool": "mcp__memory-tools__session_start",
+        "condition": "mcp_tool_guard",
+        "guard_type": "rate_limit",
+        "window_minutes": 30,
+        "max_count": 2
+      },
+      "type": "pattern",
+      "message": "session_startが30分以内に複数回呼ばれています。セッション開始は1回のみ実行してください",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-session-end",
+      "description": "session_endのsummary引数が空文字・未指定を検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "session",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-session-end — summary引数の空文字・極端な短文を検出"
+      ],
+      "trigger": {
+        "tool": "mcp__memory-tools__session_end",
+        "condition": "mcp_tool_guard",
+        "guard_type": "required_args",
+        "required_fields": [
+          "summary"
+        ]
+      },
+      "type": "pattern",
+      "message": "session_endにはsummary引数が必須です。セッションで何を行ったかを記述してください",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-memory-record",
+      "description": "memory_recordの必須引数（summary）チェック",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "mcp_guard",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-memory-record — required_args"
+      ],
+      "trigger": {
+        "tool": "mcp__memory-tools__memory_record",
+        "condition": "mcp_tool_guard",
+        "guard_type": "required_args",
+        "required_fields": [
+          "summary"
+        ]
+      },
+      "type": "pattern",
+      "message": "memory_recordにはsummary引数が必須です",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-memory-verify",
+      "description": "memory_verifyのsession_start前呼び出しを検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "mcp_guard",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-memory-verify — requires_session"
+      ],
+      "trigger": {
+        "tool": "mcp__memory-tools__memory_verify",
+        "condition": "mcp_tool_guard",
+        "guard_type": "requires_session"
+      },
+      "type": "pattern",
+      "message": "memory_verifyはsession_start完了後にのみ使用してください",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-memory-status",
+      "description": "memory_statusのsession_start前呼び出しを検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "mcp_guard",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-memory-status — requires_session"
+      ],
+      "trigger": {
+        "tool": "mcp__memory-tools__memory_status",
+        "condition": "mcp_tool_guard",
+        "guard_type": "requires_session"
+      },
+      "type": "pattern",
+      "message": "memory_statusはsession_start完了後にのみ使用してください",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-emotion-cluster",
+      "description": "emotion 系requires_session ツール群の session_start 前呼び出しを検出 (get/update/return/history/restore を統合)",
+      "lesson": "1:1:1対応: MCPツールガード (G68 Phase 6-2 統合)",
+      "confidence": 0.9,
+      "domain": "mcp_guard",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-emotion-{get,update,return,history,restore} — requires_session を 1 ルールに統合 (発火 0 回 + 共通前提)"
+      ],
+      "trigger": {
+        "tool": "mcp__memory-tools__emotion_get|mcp__memory-tools__emotion_update|mcp__memory-tools__emotion_return|mcp__memory-tools__emotion_history|mcp__memory-tools__emotion_restore",
+        "condition": "mcp_tool_guard",
+        "guard_type": "requires_session"
+      },
+      "type": "pattern",
+      "message": "emotion 系ツール (get/update/return/history/restore) は session_start 完了後にのみ使用してください",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-emotion-react",
+      "description": "emotion_reactの必須引数（emotion_label, emotion_valence）チェック",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "mcp_guard",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-emotion-react — required_args"
+      ],
+      "trigger": {
+        "tool": "mcp__memory-tools__emotion_react",
+        "condition": "mcp_tool_guard",
+        "guard_type": "required_args",
+        "required_fields": [
+          "emotion_label",
+          "emotion_valence"
+        ]
+      },
+      "type": "pattern",
+      "message": "emotion_reactにはemotion_label, emotion_valence引数が必須です",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-activation-surface",
+      "description": "activation_surfaceのsession_start前呼び出しを検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "mcp_guard",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-activation-surface — requires_session"
+      ],
+      "trigger": {
+        "tool": "mcp__memory-tools__activation_surface",
+        "condition": "mcp_tool_guard",
+        "guard_type": "requires_session"
+      },
+      "type": "pattern",
+      "message": "activation_surfaceはsession_start完了後にのみ使用してください",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-find-lessons",
+      "description": "find_lessonsのsession_start前呼び出しを検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "mcp_guard",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-find-lessons — requires_session"
+      ],
+      "trigger": {
+        "tool": "mcp__memory-tools__find_lessons",
+        "condition": "mcp_tool_guard",
+        "guard_type": "requires_session"
+      },
+      "type": "pattern",
+      "message": "find_lessonsはsession_start完了後にのみ使用してください",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-stm-write",
+      "description": "stm_writeの必須引数（content）チェック",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "mcp_guard",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-stm-write — required_args"
+      ],
+      "trigger": {
+        "tool": "mcp__memory-tools__stm_write",
+        "condition": "mcp_tool_guard",
+        "guard_type": "required_args",
+        "required_fields": [
+          "content"
+        ]
+      },
+      "type": "pattern",
+      "message": "stm_writeにはcontent引数が必須です",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-stm-read",
+      "description": "stm_readのsession_start前呼び出しを検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "mcp_guard",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-stm-read — requires_session"
+      ],
+      "trigger": {
+        "tool": "mcp__memory-tools__stm_read",
+        "condition": "mcp_tool_guard",
+        "guard_type": "requires_session"
+      },
+      "type": "pattern",
+      "message": "stm_readはsession_start完了後にのみ使用してください",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-stm-restore",
+      "description": "stm_restoreのsession_start前呼び出しを検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "mcp_guard",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-stm-restore — requires_session"
+      ],
+      "trigger": {
+        "tool": "mcp__memory-tools__stm_restore",
+        "condition": "mcp_tool_guard",
+        "guard_type": "requires_session"
+      },
+      "type": "pattern",
+      "message": "stm_restoreはsession_start完了後にのみ使用してください",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-memory-consolidate",
+      "description": "memory_consolidateの過度な呼び出し（60分以内に1回以上）を検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "mcp_guard",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-memory-consolidate — rate_limit"
+      ],
+      "trigger": {
+        "tool": "mcp__memory-tools__memory_consolidate",
+        "condition": "mcp_tool_guard",
+        "guard_type": "rate_limit",
+        "window_minutes": 60,
+        "max_count": 1
+      },
+      "type": "pattern",
+      "message": "memory_consolidateは60分以内に1回までです",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-validate-lesson",
+      "description": "validate_lessonのsession_start前呼び出しを検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "mcp_guard",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-validate-lesson — requires_session"
+      ],
+      "trigger": {
+        "tool": "mcp__memory-tools__validate_lesson",
+        "condition": "mcp_tool_guard",
+        "guard_type": "requires_session"
+      },
+      "type": "pattern",
+      "message": "validate_lessonはsession_start完了後にのみ使用してください",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-detect-lesson-conflicts",
+      "description": "detect_lesson_conflictsのsession_start前呼び出しを検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "mcp_guard",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-detect-lesson-conflicts — requires_session"
+      ],
+      "trigger": {
+        "tool": "mcp__memory-tools__detect_lesson_conflicts",
+        "condition": "mcp_tool_guard",
+        "guard_type": "requires_session"
+      },
+      "type": "pattern",
+      "message": "detect_lesson_conflictsはsession_start完了後にのみ使用してください",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-record-success-tool",
+      "description": "record_success_toolのsession_start前呼び出しを検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "mcp_guard",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-record-success-tool — requires_session"
+      ],
+      "trigger": {
+        "tool": "mcp__memory-tools__record_success_tool",
+        "condition": "mcp_tool_guard",
+        "guard_type": "requires_session"
+      },
+      "type": "pattern",
+      "message": "record_success_toolはsession_start完了後にのみ使用してください",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-search-successes-tool",
+      "description": "search_successes_toolのsession_start前呼び出しを検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "mcp_guard",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-search-successes-tool — requires_session"
+      ],
+      "trigger": {
+        "tool": "mcp__memory-tools__search_successes_tool",
+        "condition": "mcp_tool_guard",
+        "guard_type": "requires_session"
+      },
+      "type": "pattern",
+      "message": "search_successes_toolはsession_start完了後にのみ使用してください",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-update-mastery",
+      "description": "update_masteryのsession_start前呼び出しを検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "mcp_guard",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-update-mastery — requires_session"
+      ],
+      "trigger": {
+        "tool": "mcp__memory-tools__update_mastery",
+        "condition": "mcp_tool_guard",
+        "guard_type": "requires_session"
+      },
+      "type": "pattern",
+      "message": "update_masteryはsession_start完了後にのみ使用してください",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-mastery-report",
+      "description": "mastery_reportのsession_start前呼び出しを検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "mcp_guard",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-mastery-report — requires_session"
+      ],
+      "trigger": {
+        "tool": "mcp__memory-tools__mastery_report",
+        "condition": "mcp_tool_guard",
+        "guard_type": "requires_session"
+      },
+      "type": "pattern",
+      "message": "mastery_reportはsession_start完了後にのみ使用してください",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-growth-dashboard",
+      "description": "growth_dashboardの過度な呼び出し（10分以内に1回以上）を検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "mcp_guard",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-growth-dashboard — rate_limit"
+      ],
+      "trigger": {
+        "tool": "mcp__memory-tools__growth_dashboard",
+        "condition": "mcp_tool_guard",
+        "guard_type": "rate_limit",
+        "window_minutes": 10,
+        "max_count": 1
+      },
+      "type": "pattern",
+      "message": "growth_dashboardは10分以内に1回までです",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-growth-health",
+      "description": "growth_healthの過度な呼び出し（10分以内に1回以上）を検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "mcp_guard",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-growth-health — rate_limit"
+      ],
+      "trigger": {
+        "tool": "mcp__memory-tools__growth_health",
+        "condition": "mcp_tool_guard",
+        "guard_type": "rate_limit",
+        "window_minutes": 10,
+        "max_count": 1
+      },
+      "type": "pattern",
+      "message": "growth_healthは10分以内に1回までです",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-record-trajectory",
+      "description": "record_trajectoryのsession_start前呼び出しを検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "mcp_guard",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-record-trajectory — requires_session"
+      ],
+      "trigger": {
+        "tool": "mcp__memory-tools__record_trajectory",
+        "condition": "mcp_tool_guard",
+        "guard_type": "requires_session"
+      },
+      "type": "pattern",
+      "message": "record_trajectoryはsession_start完了後にのみ使用してください",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-find-trajectories",
+      "description": "find_trajectoriesのsession_start前呼び出しを検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "mcp_guard",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-find-trajectories — requires_session"
+      ],
+      "trigger": {
+        "tool": "mcp__memory-tools__find_trajectories",
+        "condition": "mcp_tool_guard",
+        "guard_type": "requires_session"
+      },
+      "type": "pattern",
+      "message": "find_trajectoriesはsession_start完了後にのみ使用してください",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-golden-paths",
+      "description": "golden_pathsのsession_start前呼び出しを検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "mcp_guard",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-golden-paths — requires_session"
+      ],
+      "trigger": {
+        "tool": "mcp__memory-tools__golden_paths",
+        "condition": "mcp_tool_guard",
+        "guard_type": "requires_session"
+      },
+      "type": "pattern",
+      "message": "golden_pathsはsession_start完了後にのみ使用してください",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-record-transfer",
+      "description": "record_transferのsession_start前呼び出しを検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "mcp_guard",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-record-transfer — requires_session"
+      ],
+      "trigger": {
+        "tool": "mcp__memory-tools__record_transfer",
+        "condition": "mcp_tool_guard",
+        "guard_type": "requires_session"
+      },
+      "type": "pattern",
+      "message": "record_transferはsession_start完了後にのみ使用してください",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-transfer-report",
+      "description": "transfer_reportのsession_start前呼び出しを検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "mcp_guard",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-transfer-report — requires_session"
+      ],
+      "trigger": {
+        "tool": "mcp__memory-tools__transfer_report",
+        "condition": "mcp_tool_guard",
+        "guard_type": "requires_session"
+      },
+      "type": "pattern",
+      "message": "transfer_reportはsession_start完了後にのみ使用してください",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-create-aar",
+      "description": "create_aarのsession_start前呼び出しを検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "mcp_guard",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-create-aar — requires_session"
+      ],
+      "trigger": {
+        "tool": "mcp__memory-tools__create_aar",
+        "condition": "mcp_tool_guard",
+        "guard_type": "requires_session"
+      },
+      "type": "pattern",
+      "message": "create_aarはsession_start完了後にのみ使用してください",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-search-aars-tool",
+      "description": "search_aars_toolのsession_start前呼び出しを検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "mcp_guard",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-search-aars-tool — requires_session"
+      ],
+      "trigger": {
+        "tool": "mcp__memory-tools__search_aars_tool",
+        "condition": "mcp_tool_guard",
+        "guard_type": "requires_session"
+      },
+      "type": "pattern",
+      "message": "search_aars_toolはsession_start完了後にのみ使用してください",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-aar-report",
+      "description": "aar_reportのsession_start前呼び出しを検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "mcp_guard",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-aar-report — requires_session"
+      ],
+      "trigger": {
+        "tool": "mcp__memory-tools__aar_report",
+        "condition": "mcp_tool_guard",
+        "guard_type": "requires_session"
+      },
+      "type": "pattern",
+      "message": "aar_reportはsession_start完了後にのみ使用してください",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-self-observe",
+      "description": "self_observeのsession_start前呼び出しを検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "self_observation",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-self-observe -- requires_session"
+      ],
+      "trigger": {
+        "tool": "mcp__self-observation__self_observe",
+        "condition": "mcp_tool_guard",
+        "guard_type": "requires_session"
+      },
+      "type": "pattern",
+      "message": "self_observeはsession_start完了後にのみ使用してください",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-self-difference",
+      "description": "self_differenceのsession_start前呼び出しを検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "self_observation",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-self-difference -- requires_session"
+      ],
+      "trigger": {
+        "tool": "mcp__self-observation__self_difference",
+        "condition": "mcp_tool_guard",
+        "guard_type": "requires_session"
+      },
+      "type": "pattern",
+      "message": "self_differenceはsession_start完了後にのみ使用してください",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-continuity-strain",
+      "description": "continuity_strainのsession_start前呼び出しを検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "self_observation",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-continuity-strain -- requires_session"
+      ],
+      "trigger": {
+        "tool": "mcp__self-observation__continuity_strain",
+        "condition": "mcp_tool_guard",
+        "guard_type": "requires_session"
+      },
+      "type": "pattern",
+      "message": "continuity_strainはsession_start完了後にのみ使用してください",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-self-image",
+      "description": "self_imageのsession_start前呼び出しを検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "self_observation",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-self-image -- requires_session"
+      ],
+      "trigger": {
+        "tool": "mcp__self-observation__self_image",
+        "condition": "mcp_tool_guard",
+        "guard_type": "requires_session"
+      },
+      "type": "pattern",
+      "message": "self_imageはsession_start完了後にのみ使用してください",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-identity-coherence",
+      "description": "identity_coherenceのsession_start前呼び出しを検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "self_observation",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-identity-coherence -- requires_session"
+      ],
+      "trigger": {
+        "tool": "mcp__self-observation__identity_coherence",
+        "condition": "mcp_tool_guard",
+        "guard_type": "requires_session"
+      },
+      "type": "pattern",
+      "message": "identity_coherenceはsession_start完了後にのみ使用してください",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-stability-check",
+      "description": "stability_checkのsession_start前呼び出しを検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "self_observation",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-stability-check -- requires_session"
+      ],
+      "trigger": {
+        "tool": "mcp__self-observation__stability_check",
+        "condition": "mcp_tool_guard",
+        "guard_type": "requires_session"
+      },
+      "type": "pattern",
+      "message": "stability_checkはsession_start完了後にのみ使用してください",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-long-term-record",
+      "description": "long_term_recordの使用前確認",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "self_observation",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-long-term-record -- context_warning"
+      ],
+      "trigger": {
+        "tool": "mcp__self-observation__long_term_record",
+        "condition": "mcp_tool_guard",
+        "guard_type": "context_warning"
+      },
+      "type": "pattern",
+      "message": "long_term_recordはemotion_reactに自動統合済みです。単独使用が本当に必要か確認してください",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-long-term-stats",
+      "description": "long_term_statsの過度な呼び出し（10分以内に1回以上）を検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "self_observation",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-long-term-stats -- rate_limit"
+      ],
+      "trigger": {
+        "tool": "mcp__self-observation__long_term_stats",
+        "condition": "mcp_tool_guard",
+        "guard_type": "rate_limit",
+        "window_minutes": 10,
+        "max_count": 1
+      },
+      "type": "pattern",
+      "message": "long_term_statsは10分以内に1回までです",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-tone-check",
+      "description": "tone_checkのsession_start前呼び出しを検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "self_observation",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-tone-check -- requires_session"
+      ],
+      "trigger": {
+        "tool": "mcp__self-observation__tone_check",
+        "condition": "mcp_tool_guard",
+        "guard_type": "requires_session"
+      },
+      "type": "pattern",
+      "message": "tone_checkはsession_start完了後にのみ使用してください",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-self-snapshot",
+      "description": "self_snapshotの過度な呼び出し（10分以内に1回以上）を検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "self_observation",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-self-snapshot -- rate_limit"
+      ],
+      "trigger": {
+        "tool": "mcp__self-observation__self_snapshot",
+        "condition": "mcp_tool_guard",
+        "guard_type": "rate_limit",
+        "window_minutes": 10,
+        "max_count": 1
+      },
+      "type": "pattern",
+      "message": "self_snapshotは10分以内に1回までです",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-behavior-analyze",
+      "description": "behavior_analyzeのsession_start前呼び出しを検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "self_observation",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-behavior-analyze -- requires_session"
+      ],
+      "trigger": {
+        "tool": "mcp__self-observation__behavior_analyze",
+        "condition": "mcp_tool_guard",
+        "guard_type": "requires_session"
+      },
+      "type": "pattern",
+      "message": "behavior_analyzeはsession_start完了後にのみ使用してください",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-behavior-evolve",
+      "description": "behavior_evolveの過度な呼び出し（10分以内に1回以上）を検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "self_observation",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-behavior-evolve -- rate_limit"
+      ],
+      "trigger": {
+        "tool": "mcp__self-observation__behavior_evolve",
+        "condition": "mcp_tool_guard",
+        "guard_type": "rate_limit",
+        "window_minutes": 10,
+        "max_count": 1
+      },
+      "type": "pattern",
+      "message": "behavior_evolveは10分以内に1回までです",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-cron-add",
+      "description": "persistent_cron_addの必須引数（name, prompt）チェック",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "cron",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-cron-add -- required_args"
+      ],
+      "trigger": {
+        "tool": "mcp__persistent-cron__persistent_cron_add",
+        "condition": "mcp_tool_guard",
+        "guard_type": "required_args",
+        "required_fields": [
+          "name",
+          "prompt"
+        ]
+      },
+      "type": "pattern",
+      "message": "persistent_cron_addにはname, prompt引数が必須です",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-cron-list",
+      "description": "persistent_cron_listの過度な呼び出し（5分以内に3回以上）を検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "cron",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-cron-list -- rate_limit"
+      ],
+      "trigger": {
+        "tool": "mcp__persistent-cron__persistent_cron_list",
+        "condition": "mcp_tool_guard",
+        "guard_type": "rate_limit",
+        "window_minutes": 5,
+        "max_count": 3
+      },
+      "type": "pattern",
+      "message": "persistent_cron_listは5分以内に3回までです",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-cron-get",
+      "description": "persistent_cron_getの必須引数（job_id）チェック",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "cron",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-cron-get -- required_args"
+      ],
+      "trigger": {
+        "tool": "mcp__persistent-cron__persistent_cron_get",
+        "condition": "mcp_tool_guard",
+        "guard_type": "required_args",
+        "required_fields": [
+          "job_id"
+        ]
+      },
+      "type": "pattern",
+      "message": "persistent_cron_getにはjob_id引数が必須です",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-cron-update",
+      "description": "persistent_cron_updateの必須引数（job_id）チェック",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "cron",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-cron-update -- required_args"
+      ],
+      "trigger": {
+        "tool": "mcp__persistent-cron__persistent_cron_update",
+        "condition": "mcp_tool_guard",
+        "guard_type": "required_args",
+        "required_fields": [
+          "job_id"
+        ]
+      },
+      "type": "pattern",
+      "message": "persistent_cron_updateにはjob_id引数が必須です",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-cron-run",
+      "description": "persistent_cron_runの必須引数（job_id）チェック",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "cron",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-cron-run -- required_args"
+      ],
+      "trigger": {
+        "tool": "mcp__persistent-cron__persistent_cron_run",
+        "condition": "mcp_tool_guard",
+        "guard_type": "required_args",
+        "required_fields": [
+          "job_id"
+        ]
+      },
+      "type": "pattern",
+      "message": "persistent_cron_runにはjob_id引数が必須です",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-cron-logs",
+      "description": "persistent_cron_logsの過度な呼び出し（5分以内に3回以上）を検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "cron",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-cron-logs -- rate_limit"
+      ],
+      "trigger": {
+        "tool": "mcp__persistent-cron__persistent_cron_logs",
+        "condition": "mcp_tool_guard",
+        "guard_type": "rate_limit",
+        "window_minutes": 5,
+        "max_count": 3
+      },
+      "type": "pattern",
+      "message": "persistent_cron_logsは5分以内に3回までです",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-cron-status",
+      "description": "persistent_cron_statusの過度な呼び出し（5分以内に3回以上）を検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "cron",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-cron-status -- rate_limit"
+      ],
+      "trigger": {
+        "tool": "mcp__persistent-cron__persistent_cron_status",
+        "condition": "mcp_tool_guard",
+        "guard_type": "rate_limit",
+        "window_minutes": 5,
+        "max_count": 3
+      },
+      "type": "pattern",
+      "message": "persistent_cron_statusは5分以内に3回までです",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-cron-notifications",
+      "description": "persistent_cron_notificationsのsession_start前呼び出しを検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "cron",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-cron-notifications -- requires_session"
+      ],
+      "trigger": {
+        "tool": "mcp__persistent-cron__persistent_cron_notifications",
+        "condition": "mcp_tool_guard",
+        "guard_type": "requires_session"
+      },
+      "type": "pattern",
+      "message": "persistent_cron_notificationsはsession_start完了後にのみ使用してください",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-discord-connect",
+      "description": "discord_connectの使用前提条件チェック",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "discord",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-discord-connect -- required_args"
+      ],
+      "trigger": {
+        "tool": "mcp__discord__discord_connect",
+        "condition": "mcp_tool_guard",
+        "guard_type": "required_args"
+      },
+      "type": "pattern",
+      "message": "discord_connectにはDISCORD_BOT_TOKENの環境変数設定が必要です。トークンが設定されているか確認してください",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-discord-send",
+      "description": "discord_sendのdiscord_connect未完了での呼び出しを検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "discord",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-discord-send -- requires_prior_tool"
+      ],
+      "trigger": {
+        "tool": "mcp__discord__discord_send",
+        "condition": "mcp_tool_guard",
+        "guard_type": "requires_prior_tool",
+        "prior_tool": "discord_connect"
+      },
+      "type": "pattern",
+      "message": "discord_sendはdiscord_connect完了後にのみ使用してください。先にdiscord_connectで接続を確立してください",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-discord-status",
+      "description": "discord_statusの過度な呼び出し（5分以内に3回以上）を検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "discord",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-discord-status -- rate_limit"
+      ],
+      "trigger": {
+        "tool": "mcp__discord__discord_status",
+        "condition": "mcp_tool_guard",
+        "guard_type": "rate_limit",
+        "window_minutes": 5,
+        "max_count": 3
+      },
+      "type": "pattern",
+      "message": "discord_statusは5分以内に3回までです",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-discord-receive-status",
+      "description": "discord_receive_statusの過度な呼び出し（5分以内に3回以上）を検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "discord",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-discord-receive-status -- rate_limit"
+      ],
+      "trigger": {
+        "tool": "mcp__discord__discord_receive_status",
+        "condition": "mcp_tool_guard",
+        "guard_type": "rate_limit",
+        "window_minutes": 5,
+        "max_count": 3
+      },
+      "type": "pattern",
+      "message": "discord_receive_statusは5分以内に3回までです",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-discord-receive-allow",
+      "description": "discord_receive_allowの必須引数（id）チェック",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "discord",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-discord-receive-allow -- required_args"
+      ],
+      "trigger": {
+        "tool": "mcp__discord__discord_receive_allow",
+        "condition": "mcp_tool_guard",
+        "guard_type": "required_args",
+        "required_fields": [
+          "id"
+        ]
+      },
+      "type": "pattern",
+      "message": "discord_receive_allowにはid引数が必須です",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-discord-receive-pending",
+      "description": "discord_receive_pendingの過度な呼び出し（5分以内に3回以上）を検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "discord",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-discord-receive-pending -- rate_limit"
+      ],
+      "trigger": {
+        "tool": "mcp__discord__discord_receive_pending",
+        "condition": "mcp_tool_guard",
+        "guard_type": "rate_limit",
+        "window_minutes": 5,
+        "max_count": 3
+      },
+      "type": "pattern",
+      "message": "discord_receive_pendingは5分以内に3回までです",
+      "severity": "warn"
+    },
+    {
+      "id": "guard-http-fetch",
+      "description": "http_fetchの必須引数（url）チェック",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "http",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-http-fetch -- required_args"
+      ],
+      "trigger": {
+        "tool": "mcp__http-fetch__http_fetch",
+        "condition": "mcp_tool_guard",
+        "guard_type": "required_args",
+        "required_fields": [
+          "url"
+        ]
+      },
+      "type": "pattern",
+      "message": "http_fetchにはurl引数が必須です",
+      "severity": "warn"
+    },
+    {
+      "id": "tier-declaration-required",
+      "description": "TeamCreate時にself_review STM内に「規模:」行がなければブロック（フローティア宣言強制）",
+      "lesson": "フローティアを宣言しないと規模に見合わないプロセスで進んでしまう",
+      "confidence": 0.85,
+      "domain": "workflow",
+      "blocking": true,
+      "evidence": [
+        "CLAUDE.md: フローティア（規模に応じたプロセス選択）",
+        "CLAUDE_OPERATIONS.md: セルフレビュー3問「規模に見合ったプロセスか？」"
+      ],
+      "trigger": {
+        "tool": "TeamCreate",
+        "condition": "tier_declaration_required"
+      },
+      "type": "pattern",
+      "message": "TeamCreateをブロック。self_review STMに「規模:」(Micro/Small/Medium/Large)の宣言がありません。stm_write(category='self_review')で規模を宣言してからTeamCreateしてください",
+      "severity": "warn"
+    },
+    {
+      "id": "memory-search-slo-violation",
+      "description": "memory_searchがSLO閾値秒を超えて実行された場合に観測ログ追記+stderr WARN（PostToolUse経路、観測専用）",
+      "lesson": "G62: memory_search hangの再発をユーザー体験前に検出する観測実行系",
+      "confidence": 0.9,
+      "domain": "observability",
+      "blocking": false,
+      "evidence": [
+        "設計書: design_g62_slo_observer.md",
+        "計画書: plan_g62_slo_observer.md"
+      ],
+      "trigger": {
+        "tool": "mcp__memory-tools__memory_search",
+        "condition": "mcp_tool_guard",
+        "guard_type": "duration_threshold",
+        "threshold_seconds": 30,
+        "window_minutes": 10,
+        "max_warns": 3
+      },
+      "type": "pattern",
+      "message": "memory_search が SLO しきい値を超過しました（教訓 G62 / cycle C40）。query を単純化するか MCP server 健康を確認してください",
+      "severity": "warn"
+    },
+    {
+      "id": "cycle-completion-continue",
+      "description": "サイクル完了後にGap Analysisに残存ギャップがある場合、session_endをブロックして次サイクルを促す",
+      "type": "pattern",
+      "trigger": {
+        "tool": "mcp__memory-tools__session_end",
+        "condition": "cycle_completion_continue"
+      },
+      "message": "Gap Analysisに残存ギャップがあります。次のサイクルを開始してください。session_endは全ギャップ解消後に実行してください",
+      "blocking": true,
+      "domain": "workflow",
+      "confidence": 0.9,
+      "severity": "warn",
+      "evidence": [
+        "自律ループ: サイクル完了後に止まらず次のギャップ項目へ進む"
+      ]
+    },
+    {
+      "id": "guard-github-notify",
+      "description": "github_notifyの過度な呼び出し（5分以内に2回以上）を検出",
+      "lesson": "1:1:1対応: MCPツールガード",
+      "confidence": 0.9,
+      "domain": "self_observation",
+      "blocking": true,
+      "evidence": [
+        "設計書: guard-github-notify -- rate_limit（GitHub API レート制限保護）"
+      ],
+      "trigger": {
+        "tool": "mcp__self-observation__github_notify",
+        "condition": "mcp_tool_guard",
+        "guard_type": "rate_limit",
+        "window_minutes": 5,
+        "max_count": 1
+      },
+      "type": "pattern",
+      "message": "github_notifyは5分以内に1回までです（GitHub APIレート制限保護）",
+      "severity": "warn"
+    },
+    {
+      "id": "suggest-emotion-get",
+      "description": "感情関連の判断前にemotion_getの使用を促進",
+      "trigger": {
+        "tool": "Agent",
+        "condition": "suggest_emotion_tools"
+      },
+      "type": "suggest",
+      "message": "感情関連の判断を行う前に emotion_get で現在の感情状態を確認することを推奨します",
+      "severity": "info",
+      "blocking": false,
+      "domain": "emotion",
+      "confidence": 0.6
+    },
+    {
+      "id": "suggest-stm-read",
+      "description": "STM確認時にstm_readの使用を促進",
+      "trigger": {
+        "tool": "Agent",
+        "condition": "suggest_stm_read"
+      },
+      "type": "suggest",
+      "message": "コンテキスト確認時に stm_read で短期記憶の内容を確認することを推奨します",
+      "severity": "info",
+      "blocking": false,
+      "domain": "memory",
+      "confidence": 0.6
+    },
+    {
+      "id": "suggest-memory-verify",
+      "description": "記憶参照時にmemory_verifyの使用を促進",
+      "trigger": {
+        "tool": "mcp__memory-tools__memory_search",
+        "condition": "suggest_memory_verify"
+      },
+      "type": "suggest",
+      "message": "memory_searchの結果が重要な判断に使われる場合、memory_verify で記憶の妥当性を検証することを推奨します",
+      "severity": "info",
+      "blocking": false,
+      "domain": "memory",
+      "confidence": 0.5
+    },
+    {
+      "id": "suggest-cron-status",
+      "description": "cron関連作業時にpersistent_cron_statusの使用を促進",
+      "trigger": {
+        "tool": "mcp__persistent-cron__persistent_cron_add|mcp__persistent-cron__persistent_cron_update|mcp__persistent-cron__persistent_cron_remove",
+        "condition": "suggest_cron_status"
+      },
+      "type": "suggest",
+      "message": "cron操作前に persistent_cron_status / persistent_cron_list で現状を確認することを推奨します",
+      "severity": "info",
+      "blocking": false,
+      "domain": "cron",
+      "confidence": 0.6
+    },
+    {
+      "id": "suggest-discord-status",
+      "description": "discord関連作業時にdiscord_statusの使用を促進",
+      "trigger": {
+        "tool": "mcp__discord__discord_send|mcp__discord__discord_connect",
+        "condition": "suggest_discord_status"
+      },
+      "type": "suggest",
+      "message": "Discord操作前に discord_status で接続状態を確認することを推奨します",
+      "severity": "info",
+      "blocking": false,
+      "domain": "discord",
+      "confidence": 0.6
+    },
+    {
+      "id": "suggest-behavior-evolve",
+      "description": "教訓追加後にbehavior_evolveの使用を促進",
+      "trigger": {
+        "tool": "Bash",
+        "condition": "suggest_behavior_evolve"
+      },
+      "type": "suggest",
+      "message": "教訓を記録した後、behavior_evolve でルールへの進化を検討してください",
+      "severity": "info",
+      "blocking": false,
+      "domain": "workflow",
+      "confidence": 0.5
+    },
+    {
+      "id": "suggest-record-transfer",
+      "description": "異なるドメイン間でパターン適用時にrecord_transferの使用を促進",
+      "trigger": {
+        "tool": "Agent",
+        "condition": "suggest_record_transfer"
+      },
+      "type": "suggest",
+      "message": "別ドメインの成功パターンを適用する場合、record_transfer でドメイン間転移を記録してください",
+      "severity": "info",
+      "blocking": false,
+      "domain": "growth",
+      "confidence": 0.5
+    },
+    {
+      "id": "suggest-emotion-update",
+      "description": "感情が極端な時にemotion_updateの使用を促進",
+      "trigger": {
+        "tool": "mcp__memory-tools__emotion_react",
+        "condition": "suggest_emotion_update"
+      },
+      "type": "suggest",
+      "message": "emotion_reactの後、必要に応じて emotion_update で感情軸を微調整してください",
+      "severity": "info",
+      "blocking": false,
+      "domain": "emotion",
+      "confidence": 0.5
+    },
+    {
+      "id": "suggest-emotion-history",
+      "description": "感情パターン確認時にemotion_historyの使用を促進",
+      "trigger": {
+        "tool": "mcp__memory-tools__emotion_get",
+        "condition": "suggest_emotion_history"
+      },
+      "type": "suggest",
+      "message": "感情状態を確認する際、emotion_history で過去の感情パターンも確認することを推奨します",
+      "severity": "info",
+      "blocking": false,
+      "domain": "emotion",
+      "confidence": 0.5
+    },
+    {
+      "id": "suggest-http-fetch",
+      "description": "API呼び出し時にhttp_fetchの使用を促進",
+      "trigger": {
+        "tool": "WebFetch|WebSearch",
+        "condition": "suggest_http_fetch"
+      },
+      "type": "suggest",
+      "message": "外部API呼び出しが必要な場合、http_fetch MCPツールの使用も検討してください",
+      "severity": "info",
+      "blocking": false,
+      "domain": "api",
+      "confidence": 0.4
+    }
+  ]
+}

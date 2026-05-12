@@ -195,6 +195,52 @@ run_test "Bypass: Bash with canonical file_path + secret command is NOT exempt" 
   "{\"tool_name\":\"Bash\",\"tool_input\":{\"file_path\":$CANONICAL_SELF_TEST_PATH_JSON_LITERAL,\"command\":\"echo sk-EXAMPLEFIXTUREdoNotUse123456789012345\"}}" \
   2
 
+# Reviewer LOW 3: path.resolve normalization + non-string file_path coverage.
+# Implementation verified by direct path.resolve experiment (see commit log):
+#   - "..\hooks\..\hooks\test_secret_detector.sh" -> canonical (true)
+#   - "<canonical>/"                              -> canonical (true)
+#   - path.resolve(123)                           -> TypeError (caught, falls through)
+
+# LOW 1: '..' segment in path is normalized by path.resolve -> exempt (exit 0)
+# Build a JSON literal whose value contains a real "..\hooks\" segment that
+# path.resolve must collapse. We generate it via Node (same way as
+# CANONICAL_SELF_TEST_PATH_JSON_LITERAL) so the JSON-escaping of backslashes is
+# correct on Windows.
+DOTDOT_SELF_TEST_PATH_JSON_LITERAL=$(cd "$SCRIPT_DIR" && node -e "
+  const path = require('path');
+  const canonical = path.resolve('test_secret_detector.sh');
+  // Inject '..\\hooks\\' (or '../hooks/') just before the basename so the
+  // input string is non-canonical but resolves to canonical.
+  const sep = path.sep;
+  const dir = path.dirname(canonical);
+  const base = path.basename(canonical);
+  const dirName = path.basename(dir);
+  const nonCanonical = dir + sep + '..' + sep + dirName + sep + base;
+  console.log(JSON.stringify(nonCanonical));
+")
+
+run_test "Self-test exemption: '..' segment is normalized to canonical (exempt)" \
+  "{\"tool_name\":\"Edit\",\"tool_input\":{\"file_path\":$DOTDOT_SELF_TEST_PATH_JSON_LITERAL,\"old_string\":\"x\",\"new_string\":\"sk-EXAMPLEFIXTUREdoNotUse123456789012345\"}}" \
+  0
+
+# LOW 2: trailing separator on canonical path is normalized -> exempt (exit 0)
+TRAILING_SELF_TEST_PATH_JSON_LITERAL=$(cd "$SCRIPT_DIR" && node -e "
+  const path = require('path');
+  const canonical = path.resolve('test_secret_detector.sh');
+  console.log(JSON.stringify(canonical + path.sep));
+")
+
+run_test "Self-test exemption: trailing separator on canonical path is normalized (exempt)" \
+  "{\"tool_name\":\"Edit\",\"tool_input\":{\"file_path\":$TRAILING_SELF_TEST_PATH_JSON_LITERAL,\"old_string\":\"x\",\"new_string\":\"sk-EXAMPLEFIXTUREdoNotUse123456789012345\"}}" \
+  0
+
+# LOW 3: non-string file_path (number) makes path.resolve throw TypeError;
+# the hook must catch it and fall through to secret detection -> exit 2.
+# JSON encodes 123 as a number, not a string, so file_path is a number on the JS side.
+run_test "Non-string file_path falls through to detection (no crash, secret blocked)" \
+  '{"tool_name":"Edit","tool_input":{"file_path":123,"old_string":"x","new_string":"sk-EXAMPLEFIXTUREdoNotUse123456789012345"}}' \
+  2
+
 # ---- Summary ----
 echo ""
 echo "=== Results: $PASS passed, $FAIL failed ==="

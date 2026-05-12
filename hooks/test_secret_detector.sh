@@ -158,15 +158,37 @@ run_test "Detect secret in Bash env export" \
   '{"tool_name":"Bash","tool_input":{"command":"export OPENAI_API_KEY=sk-EXAMPLEFIXTUREdoNotUseABCdef0123456789ABCDEF0123"}}' \
   2
 
-# ---- Self-test path exemption ----
+# ---- Self-test path exemption (canonical absolute path only) ----
 echo "--- Self-test path skip ---"
 
-run_test "Edit on test_secret_detector.sh is exempt (sk- in new_string passes)" \
-  '{"tool_name":"Edit","tool_input":{"file_path":"hooks/test_secret_detector.sh","old_string":"x","new_string":"sk-EXAMPLEFIXTUREdoNotUse123456789012345"}}' \
+# Compute canonical absolute path the same way secret-detector.js does
+# (path.resolve(__dirname, 'test_secret_detector.sh')). We invoke node with
+# cwd = hook directory so its native path resolution matches the hook's
+# __dirname (avoids Git Bash POSIX-path vs Windows-path mismatch). JSON.stringify
+# emits a properly JSON-escaped string literal (handles Windows backslashes).
+CANONICAL_SELF_TEST_PATH_JSON_LITERAL=$(cd "$SCRIPT_DIR" && node -e "console.log(JSON.stringify(require('path').resolve('test_secret_detector.sh')))")
+
+run_test "Edit on canonical self-test path is exempt (sk- in new_string passes)" \
+  "{\"tool_name\":\"Edit\",\"tool_input\":{\"file_path\":$CANONICAL_SELF_TEST_PATH_JSON_LITERAL,\"old_string\":\"x\",\"new_string\":\"sk-EXAMPLEFIXTUREdoNotUse123456789012345\"}}" \
   0
 
 run_test "Edit on other path still detects sk-" \
   '{"tool_name":"Edit","tool_input":{"file_path":"app.js","old_string":"x","new_string":"sk-EXAMPLEFIXTUREdoNotUse123456789012345"}}' \
+  2
+
+# Bypass-prevention tests: only canonical absolute path is exempt; any
+# attacker-controlled path that merely ends with hooks/test_secret_detector.sh
+# must still be detected (exit 2).
+run_test "Bypass: attacker subdir relative path is NOT exempt" \
+  '{"tool_name":"Edit","tool_input":{"file_path":"attacker/hooks/test_secret_detector.sh","old_string":"x","new_string":"sk-EXAMPLEFIXTUREdoNotUse123456789012345"}}' \
+  2
+
+run_test "Bypass: Windows-style alien path is NOT exempt" \
+  '{"tool_name":"Edit","tool_input":{"file_path":"C:/evil/hooks/test_secret_detector.sh","old_string":"x","new_string":"sk-EXAMPLEFIXTUREdoNotUse123456789012345"}}' \
+  2
+
+run_test "Bypass: absolute alien path is NOT exempt" \
+  '{"tool_name":"Edit","tool_input":{"file_path":"/other/hooks/test_secret_detector.sh","old_string":"x","new_string":"sk-EXAMPLEFIXTUREdoNotUse123456789012345"}}' \
   2
 
 # ---- Summary ----

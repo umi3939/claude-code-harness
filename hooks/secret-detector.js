@@ -7,6 +7,8 @@
  * 非検出時: exit 0（通過）
  */
 
+const path = require('path');
+
 const MAX_STDIN = 1024 * 1024;
 
 // Target tools
@@ -127,11 +129,20 @@ process.stdin.on('end', () => {
     const toolName = input.tool_name || '';
     const toolInput = input.tool_input || {};
 
-    // Self-test fixture file is exempt to break circular dependency
+    // Self-test fixture file is exempt to break circular dependency.
+    // Use canonical absolute path equality (path.resolve) to avoid bypass
+    // via attacker-controlled paths like "attacker/hooks/test_secret_detector.sh".
     const filePath = toolInput.file_path || '';
-    if (/(?:^|[\\/])hooks[\\/]test_secret_detector\.sh$/.test(filePath)) {
-      process.exit(0);
-      return;
+    if (filePath) {
+      try {
+        const SELF_TEST_PATH = path.resolve(__dirname, 'test_secret_detector.sh');
+        if (path.resolve(filePath) === SELF_TEST_PATH) {
+          process.exit(0);
+          return;
+        }
+      } catch {
+        // path.resolve failure: fall through to detection (fail-closed)
+      }
     }
 
     // Only check target tools

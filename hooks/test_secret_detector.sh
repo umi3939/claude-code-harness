@@ -191,6 +191,10 @@ run_test "Bypass: absolute alien path is NOT exempt" \
   '{"tool_name":"Edit","tool_input":{"file_path":"/other/hooks/test_secret_detector.sh","old_string":"x","new_string":"sk-EXAMPLEFIXTUREdoNotUse123456789012345"}}' \
   2
 
+run_test "Bypass: Bash with canonical file_path + secret command is NOT exempt" \
+  "{\"tool_name\":\"Bash\",\"tool_input\":{\"file_path\":$CANONICAL_SELF_TEST_PATH_JSON_LITERAL,\"command\":\"echo sk-EXAMPLEFIXTUREdoNotUse123456789012345\"}}" \
+  2
+
 # ---- Summary ----
 echo ""
 echo "=== Results: $PASS passed, $FAIL failed ==="

@@ -133,7 +133,7 @@ process.stdin.on('end', () => {
     // Use canonical absolute path equality (path.resolve) to avoid bypass
     // via attacker-controlled paths like "attacker/hooks/test_secret_detector.sh".
     const filePath = toolInput.file_path || '';
-    if (filePath) {
+    if (filePath && (toolName === 'Edit' || toolName === 'Write')) {
       try {
         const SELF_TEST_PATH = path.resolve(__dirname, 'test_secret_detector.sh');
         if (path.resolve(filePath) === SELF_TEST_PATH) {
@@ -141,7 +141,7 @@ process.stdin.on('end', () => {
           return;
         }
       } catch {
-        // path.resolve failure: fall through to detection (fail-closed)
+        // path.resolve failure (e.g., non-string file_path): fall through to detection (fail-closed)
       }
     }
 

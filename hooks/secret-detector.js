@@ -127,6 +127,13 @@ process.stdin.on('end', () => {
     const toolName = input.tool_name || '';
     const toolInput = input.tool_input || {};
 
+    // Self-test fixture file is exempt to break circular dependency
+    const filePath = toolInput.file_path || '';
+    if (/(?:^|[\\/])hooks[\\/]test_secret_detector\.sh$/.test(filePath)) {
+      process.exit(0);
+      return;
+    }
+
     // Only check target tools
     if (!TARGET_TOOLS.has(toolName)) {
       process.exit(0);
